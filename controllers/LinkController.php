@@ -96,11 +96,86 @@ class LinkController extends Controller
     {
         $model = new CreateUrlForm();
 
-        if ($model->load(Yii::$app->request->post()) && $link = $model->createLink()) {
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()) && $link = $model->createLink()) {
+            // Send JSON answer - link & confirmed = true
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            return $link;
+        } else if ( $model->load(Yii::$app->request->post()) && $link = $model->createLink()) {
             return $this->redirect(['view', 'id' => $link->id]);
         }
 
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post()))  {
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $return_array = [
+                'confirmed' => false,
+                ];
+            return $return_array;
+        }
         return $this->render('create', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Validate model from AJAX Post
+     * @return mixed
+     */
+    public function actionValidate()
+    {
+        $model = new CreateUrlForm();
+        // AJAX
+        if ( $model->load(Yii::$app->request->post()) && Yii::$app->request->isAjax ) { 
+            $return_array = [
+            'errors' => [],
+            'confirmed' => false,
+            ];
+
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            //return ActiveForm::validate($model);
+            $return_array['errors'] = ActiveForm::validate($model);
+
+            // if ($model->createLink() == 1) {
+            //     $return_array['confirmed'] = true;
+            // }
+
+            return $this->asJson($return_array);
+        }
+        throw new \yii\web\BadRequestHttpException('Bad request!');
+
+        return $this->render('validate', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Process model from AJAX Post
+     * @return mixed
+     */
+    public function actionProcess()
+    {
+        $model = new CreateUrlForm();
+
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
+            $return_array = [
+                'errors' => [],
+                'confirmed' => false,
+            ];
+
+            Yii::$app->response->format = Response::FORMAT_JSON;
+            $return_array['errors'] = ActiveForm::validate($model);
+
+            if ($model->createLink() == 1) {
+                $return_array['confirmed'] = true;
+            }
+
+            return $this->asJson($return_array);
+        }
+
+        if ( $model->load(Yii::$app->request->post()) && $link = $model->save()) {
+            return $this->redirect(['view', 'id' => $link->id]);
+        }
+
+        return $this->render('process', [
             'model' => $model,
         ]);
     }
@@ -232,16 +307,6 @@ class LinkController extends Controller
             return $model;
         }
         throw new NotFoundHttpException('Запрашиваемая ссылка не существует.');
-    }
-
-    public function actionValidate()
-    {
-        $model = new Link();
-        $request = \Yii::$app->getRequest();
-        if ($request->isGet && $model->load($request->get())) {
-            \Yii::$app->response->format = Response::FORMAT_JSON;
-            return ActiveForm::validate($model);
-        }
     }
 
 }

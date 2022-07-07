@@ -6,6 +6,7 @@ use Yii;
 use app\models\Link;
 use yii\base\Model;
 use yii\helpers\Html;
+use yii\web\Response;
 
 /**
  * Class CreateUrlForm
@@ -72,7 +73,7 @@ class CreateUrlForm extends Model
             }
             $findedLink = Link::findByUrl($tempUrl);
             if ($findedLink) {
-                $this->addError($attribute, 'Не удалось создать короткую ссылку, т.к. она была создана ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );
+                $this->addError($attribute, 'Ссылка была сокращена ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );
                 //Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary'])
             }
             // Проверяем дубль ссылки без SSL
@@ -80,13 +81,13 @@ class CreateUrlForm extends Model
                 $tempUrl = str_replace("https://", "http://", $tempUrl);
                 $findedLink = Link::findByUrl($tempUrl);
                 if ($findedLink) {
-                    $this->addError($attribute, 'Не удалось создать короткую ссылку, т.к. она была создана ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );
+                    $this->addError($attribute, 'Ссылка была сокращена ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );
                 }
             } else {
                 $tempUrl = str_replace("http://", "https://", $tempUrl);
                 $findedLink = Link::findByUrl($tempUrl);
                 if ($findedLink) {
-                    $this->addError($attribute, 'Не удалось создать короткую ссылку, т.к. она была создана ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );
+                    $this->addError($attribute, 'Ссылка была сокращена ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );
                 }
             }
         }
@@ -118,6 +119,12 @@ class CreateUrlForm extends Model
 
         $link->description = $this->description;
         $link->hash = $this->hash;
+
+        // AJAX answer
+        if (Yii::$app->request->isAjax && Yii::$app->request->post()) {
+            // Send JSON answer to controller - link & confirmed = true
+            return $link->save() ? ['confirmed' => true, 'link' => $link] : ['confirmed' => false];
+        }
 
         return $link->save() ? $link : null;
         
