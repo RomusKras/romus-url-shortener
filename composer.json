@@ -22,7 +22,10 @@
         "lysenkobv/yii2-geoip": "^1.0.4",
         "ua-parser/uap-php": "^3.9.14",
         "yiisoft/yii2-bootstrap": "^2.0",
-        "linslin/yii2-curl": "*"
+        "linslin/yii2-curl": "*",
+        "yiisoft/yii2-queue": "dev-master",
+        "pda/pheanstalk": "^3.2.1",
+        "scorpsan/yii2-geoip": "^1.3"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.1.0",

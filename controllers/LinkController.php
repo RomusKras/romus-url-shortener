@@ -3,6 +3,7 @@
 namespace app\controllers;
 
 use app\models\forms\CreateUrlForm;
+use app\controllers\CheckBots;
 use app\models\Hit;
 use app\models\HitSearch;
 use Yii;
@@ -14,7 +15,6 @@ use yii\web\MethodNotAllowedHttpException;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\web\HttpException;
-use linslin\yii2\curl;
 use yii\helpers\BaseJson;
 use yii\widgets\ActiveForm;
 use yii\web\Response;
@@ -232,43 +232,40 @@ class LinkController extends Controller
         $ip = Yii::$app->request->userIP;
         $user_agent = Yii::$app->request->userAgent;
 
-        // Проверяем не бот ли это
-        $curl = new curl\Curl();
-        $response = $curl->setGetParams([
-            'userAgent' => $user_agent,
-         ])
-         ->get('https://qnits.net/api/checkUserAgent');
-         // List of status codes here http://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-        switch ($curl->responseCode) {
-            case 'timeout':
-                //timeout error logic here
-                break;
-                
-            case 200:
-                //success logic here
-                // Обрабатываем ответ 
-                //$responseArray = print_r($response, true);
-                //Yii::error('Debug array answer ' . $responseArray);
-                $response = json_decode($response, true);
-                if ($response['isBot'] === false) {
-
-                } else {
-                    throw new HttpException(404 ,'Ботам не позволительно это!');
-                    //return $this->redirect('site/error');
-                }
-                break;
-
-            case 404:
-                //404 Error logic here
-                break;
+        $country = null;
+        $city = null;
+        try {
+            $ip2 = Yii::$app->geoip->ip($ip);
+            $country   = $ip2->country ? $ip2->country  : 'Неизвестно';
+            $city      = $ip2->city    ? $ip2->city     : 'Неизвестно';
+        } catch (\Exception $e) {
+            Yii::error('1 GeoIp2 Error = ' . $e);
         }
+        
+        // Кидаем в очередь проверку на бота и запись в историю посещений
+        $id = Yii::$app->queue->push(new CheckBots([
+            'userAgent' => $user_agent,
+            'ip' => $ip,
+            'hash' => $hash,
+            'country' => $country,
+            'city' => $city,
+        ]));
 
-        // Если не бот
-        if ($link->generateHit($ip, $user_agent)) {
-            $link->updateCounter();
-            return $this->redirect($link->url);
-        } 
-        return $this->redirect('site/error');
+        // Yii::error('Задание ждет в очереди: '.Yii::$app->queue->isWaiting($id));
+        // $isDoneMarker = 0;
+        // if (Yii::$app->queue->isDone($id)) {
+        //     $isDoneMarker = 1;
+        // }
+        // Yii::error('Задание выполнено в очереди: '.$isDoneMarker);
+        // $isReservedMarker = 0;
+        // if (Yii::$app->queue->isReserved($id)) {
+        //     $isReservedMarker = 1;
+        // }
+        // Yii::error('Задание выполняется в очереди: '.$isReservedMarker);
+
+
+        //return $this->redirect('site/error');
+        return $this->redirect($link->url);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace app\models\forms;
 
 use Yii;
 use app\models\Link;
+use Exception;
 use yii\base\Model;
 use yii\helpers\Html;
 use yii\web\Response;
@@ -60,6 +61,7 @@ class CreateUrlForm extends Model
     {
         if (!$this->hasErrors()) {
             $sslFlag = false;
+            //$tempUrl = filter_var($this->url, FILTER_SANITIZE_URL);
             $tempUrl = $this->url;
             // Если в конце ссылки нет /, то добавим
             if (!str_ends_with($tempUrl, '/')) {
@@ -71,6 +73,11 @@ class CreateUrlForm extends Model
             } else if (str_starts_with($tempUrl, 'https://')) {
                 $sslFlag = true;
             }
+            // Корректен ли URL '~^(?:https?://)?[^.]+\.\S{2,4}$~iu'
+            if (!preg_match("/[a-zа-я]{1,128}[.][a-zа-я]{2,128}/u", $tempUrl)) {
+                $this->addError($attribute, 'Проверьте правильность ввода ссылки');
+            }
+
             $findedLink = Link::findByUrl($tempUrl);
             if ($findedLink) {
                 $this->addError($attribute, 'Ссылка была сокращена ранее '.Html::a('Перейти', ['view', 'id' => $findedLink->id], ['class' => 'btn btn-primary btn-sm']) );

@@ -65,6 +65,7 @@ class Link extends \yii\db\ActiveRecord
             [['counter', 'created_by'], 'integer'],
             [['url', 'description', 'hash'], 'string', 'max' => 255],
             [['created_by'], 'exist', 'skipOnError' => true, 'targetClass' => User::class, 'targetAttribute' => ['created_by' => 'id']],
+            ['url', 'url', 'defaultScheme' => ['http', 'https'], 'enableIDN' => true],
         ];
     }
 
@@ -117,12 +118,18 @@ class Link extends \yii\db\ActiveRecord
      * @param $ua
      * @return bool
      */
-    public function generateHit($ip = null, $ua = null)
+    public function generateHit($ip = null, $ua = null, $country = null, $city = null)
     {
         $hit = new Hit();
         $hit->link_id = $this->id;
         $hit->ip = $ip;
         $hit->user_agent = $ua;
+        if ($country != null) {
+            $hit->country = $country;
+        }
+        if ($city != null) {
+            $hit->city = $city;
+        }
         $hitSave = $hit->save();
         if ($hitSave === false) {
             $errToPrint = "";

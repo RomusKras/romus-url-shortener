@@ -70,9 +70,13 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 } else {
                     // Форма принята, показываем полученную сокр. ссылку
-                    $('div.link-create.container').after($('<div>', {
-                        class: 'short-link-wrap container'
-                    }));
+                    if ($('div.short-link-wrap.container').length) {
+                        $('div.short-link-wrap.container').empty();
+                    } else {
+                        $('div.link-create.container').after($('<div>', {
+                            class: 'short-link-wrap container'
+                        }));
+                    }
                     $('div.short-link-wrap.container').append($('<h1>', {
                         text: 'Ссылка сокращена.'
                     }));       

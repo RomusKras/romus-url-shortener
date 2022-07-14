@@ -91,11 +91,13 @@ class Hit extends \yii\db\ActiveRecord
             // Country and City by IP
             try {
                 $ip = Yii::$app->geoip->ip($this->ip);
+                //$ip = Yii::$app->geoIp2->getInfo($this->ip);
                 $this->country   = $ip->country ? $ip->country  : 'Неизвестно';
                 $this->city      = $ip->city    ? $ip->city     : 'Неизвестно';
             } catch (\Exception $e) {
-                $this->country   = 'Неизвестно';
-                $this->city      = 'Неизвестно';
+                $this->country   = $this->country ? $this->country : 'Неизвестно';
+                $this->city      = $this->city ? $this->city : 'Неизвестно';
+                //Yii::error('GeoIp2 Error = ' . $e);
             }
             // OS and Browser by UA
             try {

@@ -7,7 +7,10 @@ $config = [
     'id' => 'basic',
     'name' => 'Shortener 3000',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => [
+        'log', 
+        'queue', // queue - очередь для beanstalk
+    ], 
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
@@ -26,6 +29,13 @@ $config = [
         ],
         'geoip' => [
             'class' => 'lysenkobv\GeoIP\GeoIP'
+        ],
+        'geoIp2' => [
+            'class' => 'scorpsan\geoip\GeoIp',
+    // uncomment next line if you register on sypexgeo.net and paste your key        
+    //        'keySypex' => 'key-sypexgeo-net-this',
+    // if need more timeout (default 5 = 5000 millisecond)
+    //        'timeout' => 6,
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -64,6 +74,13 @@ $config = [
                 '<hash:\w+>' => 'link/redirect',
             ],
         ],
+        'queue' => [
+            'class' => \yii\queue\beanstalk\Queue::class,
+            'as log' => \yii\queue\LogBehavior::class,
+            'host' => 'localhost',
+            'port' => 11300,
+            'tube' => 'queue',
+        ],
         'i18n' => [
             'translations' => [
                 'app*' => [
@@ -78,6 +95,14 @@ $config = [
             ],
         ],
     ],
+    'modules' => [
+        'debug' => [
+            'class' => \yii\debug\Module::class,
+            'panels' => [
+                'queue' => \yii\queue\debug\Panel::class,
+            ],
+        ],
+    ],
     'params' => $params,
 ];
 
@@ -87,14 +112,14 @@ if (YII_ENV_DEV) {
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        'allowedIPs' => ['127.0.0.1', '::1', '178.47.73.235'],
+        'allowedIPs' => ['127.0.0.1', '::1', '37.79.135.195'],
     ];
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        'allowedIPs' => ['127.0.0.1', '::1', '178.47.73.235'],
+        'allowedIPs' => ['127.0.0.1', '::1', '37.79.135.195'],
     ];
 }
 
