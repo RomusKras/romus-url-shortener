@@ -7,6 +7,7 @@ $config = [
     'id' => 'basic',
     'name' => 'Shortener 3000',
     'basePath' => dirname(__DIR__),
+    'language' => 'ru',
     'bootstrap' => [
         'log', 
         'queue', // queue - очередь для beanstalk
@@ -112,14 +113,14 @@ if (YII_ENV_DEV) {
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        'allowedIPs' => ['127.0.0.1', '::1', '37.79.135.195'],
+        'allowedIPs' => ['127.0.0.1', '::1', '37.79.20.231'],
     ];
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
         // uncomment the following to add your IP if you are not connecting from localhost.
-        'allowedIPs' => ['127.0.0.1', '::1', '37.79.135.195'],
+        'allowedIPs' => ['127.0.0.1', '::1', '37.79.20.231'],
     ];
 }
 
